@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { mockDecks, type Deck } from '@/data/mockData';
+import { MorphingCardStack, type CardData } from '@/components/ui/morphing-card-stack';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -14,13 +15,14 @@ import {
   Clock,
   TrendingUp,
   Grid3X3,
-  List
+  List,
+  Layers
 } from 'lucide-react';
 
 const Library = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<'stack' | 'grid' | 'list'>('stack');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const categories = ['All', ...new Set(mockDecks.map(d => d.category))];
@@ -97,10 +99,20 @@ const Library = () => {
           {/* View Toggle */}
           <div className="flex gap-1 glass-panel p-1 rounded-lg">
             <button
+              onClick={() => setViewMode('stack')}
+              className={`p-2 rounded-md transition-colors ${
+                viewMode === 'stack' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'
+              }`}
+              title="Stack View"
+            >
+              <Layers className="w-5 h-5" />
+            </button>
+            <button
               onClick={() => setViewMode('grid')}
               className={`p-2 rounded-md transition-colors ${
                 viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'
               }`}
+              title="Grid View"
             >
               <Grid3X3 className="w-5 h-5" />
             </button>
@@ -109,6 +121,7 @@ const Library = () => {
               className={`p-2 rounded-md transition-colors ${
                 viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'
               }`}
+              title="List View"
             >
               <List className="w-5 h-5" />
             </button>
@@ -141,9 +154,35 @@ const Library = () => {
           </div>
         </div>
 
-        {/* Decks Grid/List */}
+        {/* Decks Stack/Grid/List */}
         <AnimatePresence mode="wait">
-          {viewMode === 'grid' ? (
+          {viewMode === 'stack' ? (
+            <motion.div
+              key="stack"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex justify-center py-8"
+            >
+              <MorphingCardStack
+                cards={filteredDecks.map((deck): CardData => ({
+                  id: deck.id,
+                  title: deck.name,
+                  description: deck.description,
+                  icon: <span className="text-3xl">{deck.icon}</span>,
+                  color: deck.color,
+                  metadata: {
+                    count: deck.cardCount,
+                    progress: deck.masteryPercentage,
+                    streak: deck.status === 'active' ? 3 : 0,
+                  },
+                }))}
+                defaultLayout="stack"
+                showLayoutToggle={false}
+                onCardClick={(card) => navigate(`/recall?deck=${card.id}`)}
+              />
+            </motion.div>
+          ) : viewMode === 'grid' ? (
             <motion.div
               key="grid"
               initial={{ opacity: 0 }}
