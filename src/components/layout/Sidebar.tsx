@@ -1,5 +1,6 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { RecallifyLogo } from '@/components/brand/RecallifyLogo';
 import { cn } from '@/lib/utils';
 import { 
   LayoutDashboard, 
@@ -7,7 +8,7 @@ import {
   Library, 
   Trophy, 
   Settings,
-  Brain,
+  Users,
   LogOut
 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -17,6 +18,7 @@ const navItems = [
   { path: '/analytics', label: 'Analytics', icon: BarChart3 },
   { path: '/library', label: 'Library', icon: Library },
   { path: '/challenges', label: 'Challenges', icon: Trophy },
+  { path: '/social', label: 'Social', icon: Users },
 ];
 
 const accountItems = [
@@ -26,17 +28,18 @@ const accountItems = [
 export const Sidebar = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-card border-r border-border flex flex-col z-50">
       {/* Logo */}
       <div className="p-6 border-b border-border">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-gradient-xp flex items-center justify-center">
-            <Brain className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <span className="font-display text-xl font-bold text-foreground">Recallify</span>
-        </div>
+        <RecallifyLogo size="md" showText={true} animated={false} />
       </div>
 
       {/* Main Navigation */}
@@ -113,7 +116,7 @@ export const Sidebar = () => {
                 </p>
               </div>
               <button 
-                onClick={logout}
+                onClick={handleLogout}
                 className="p-2 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <LogOut className="w-4 h-4" />
