@@ -4,6 +4,9 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { MemoryAura, getAuraState, type AuraState } from '@/components/ui/memory-aura';
+import { SmartNudgeBanner } from '@/components/ui/smart-nudge-banner';
+import { GhostCompetitor } from '@/components/social/GhostCompetitor';
 import { 
   Users, 
   Trophy, 
@@ -22,22 +25,30 @@ import {
   Zap
 } from 'lucide-react';
 
+// Helper to get aura state based on user data
+const getUserAuraState = (userData: { streak?: number; status?: string; recallScore?: number }): AuraState => {
+  if (userData.status === 'studying') return 'focus';
+  if ((userData.streak || 0) >= 40) return 'strong';
+  if ((userData.streak || 0) >= 20) return 'decaying';
+  return 'at-risk';
+};
+
 // Mock data for social features
 const mockLeaderboard = [
-  { id: '1', name: 'Alex Chen', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face', xp: 12450, streak: 45, level: 15, isCurrentUser: true },
-  { id: '2', name: 'Sarah Kim', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face', xp: 11200, streak: 38, level: 14, isCurrentUser: false },
-  { id: '3', name: 'Mike Johnson', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face', xp: 10850, streak: 52, level: 13, isCurrentUser: false },
-  { id: '4', name: 'Emma Wilson', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face', xp: 9700, streak: 29, level: 12, isCurrentUser: false },
-  { id: '5', name: 'James Lee', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face', xp: 8900, streak: 21, level: 11, isCurrentUser: false },
-  { id: '6', name: 'Lisa Park', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face', xp: 8400, streak: 33, level: 10, isCurrentUser: false },
-  { id: '7', name: 'David Chen', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=face', xp: 7800, streak: 18, level: 9, isCurrentUser: false },
+  { id: '1', name: 'Alex Chen', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face', xp: 12450, streak: 45, level: 15, isCurrentUser: true, recallScore: 92 },
+  { id: '2', name: 'Sarah Kim', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face', xp: 11200, streak: 38, level: 14, isCurrentUser: false, recallScore: 88 },
+  { id: '3', name: 'Mike Johnson', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face', xp: 10850, streak: 52, level: 13, isCurrentUser: false, recallScore: 95 },
+  { id: '4', name: 'Emma Wilson', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face', xp: 9700, streak: 29, level: 12, isCurrentUser: false, recallScore: 65 },
+  { id: '5', name: 'James Lee', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face', xp: 8900, streak: 21, level: 11, isCurrentUser: false, recallScore: 72 },
+  { id: '6', name: 'Lisa Park', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face', xp: 8400, streak: 33, level: 10, isCurrentUser: false, recallScore: 82 },
+  { id: '7', name: 'David Chen', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=face', xp: 7800, streak: 18, level: 9, isCurrentUser: false, recallScore: 45 },
 ];
 
 const mockFriends = [
-  { id: '2', name: 'Sarah Kim', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face', status: 'online', lastActive: 'Now', streak: 38 },
-  { id: '3', name: 'Mike Johnson', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face', status: 'online', lastActive: '5m ago', streak: 52 },
-  { id: '4', name: 'Emma Wilson', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face', status: 'offline', lastActive: '2h ago', streak: 29 },
-  { id: '5', name: 'James Lee', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face', status: 'studying', lastActive: 'Studying now', streak: 21 },
+  { id: '2', name: 'Sarah Kim', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face', status: 'online', lastActive: 'Now', streak: 38, bestScore: 85 },
+  { id: '3', name: 'Mike Johnson', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face', status: 'online', lastActive: '5m ago', streak: 52, bestScore: 120 },
+  { id: '4', name: 'Emma Wilson', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face', status: 'offline', lastActive: '2h ago', streak: 29, bestScore: 95 },
+  { id: '5', name: 'James Lee', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face', status: 'studying', lastActive: 'Studying now', streak: 21, bestScore: 78 },
 ];
 
 const mockStudyGroups = [
@@ -76,9 +87,15 @@ const Social = () => {
     }
   };
 
+  // Get offline friends for ghost competitor feature
+  const offlineFriends = mockFriends.filter((f) => f.status === 'offline');
+
   return (
     <AppLayout>
       <div className="max-w-7xl mx-auto space-y-8">
+        {/* Smart Nudge Banner */}
+        <SmartNudgeBanner />
+
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -204,11 +221,16 @@ const Social = () => {
                         <div className="w-8 flex justify-center">
                           {getRankIcon(index + 1)}
                         </div>
-                        <img
-                          src={player.avatar}
-                          alt={player.name}
-                          className="w-10 h-10 rounded-full object-cover ring-2 ring-border"
-                        />
+                        <MemoryAura
+                          state={getUserAuraState({ streak: player.streak, recallScore: player.recallScore })}
+                          size="md"
+                        >
+                          <img
+                            src={player.avatar}
+                            alt={player.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </MemoryAura>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <p className="font-semibold text-foreground truncate">{player.name}</p>
@@ -265,14 +287,19 @@ const Social = () => {
                         transition={{ delay: index * 0.05 }}
                         className="p-4 flex items-center gap-4 hover:bg-muted/20 transition-colors"
                       >
-                        <div className="relative">
-                          <img
-                            src={friend.avatar}
-                            alt={friend.name}
-                            className="w-12 h-12 rounded-full object-cover"
-                          />
-                          <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-card ${getStatusColor(friend.status)}`} />
-                        </div>
+                        <MemoryAura
+                          state={getUserAuraState({ streak: friend.streak, status: friend.status })}
+                          size="lg"
+                        >
+                          <div className="relative w-full h-full">
+                            <img
+                              src={friend.avatar}
+                              alt={friend.name}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-card ${getStatusColor(friend.status)}`} />
+                          </div>
+                        </MemoryAura>
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-foreground truncate">{friend.name}</p>
                           <p className="text-sm text-muted-foreground">{friend.lastActive}</p>
@@ -397,11 +424,33 @@ const Social = () => {
               </div>
             </motion.div>
 
+            {/* Ghost Competitor - Offline Friends */}
+            {offlineFriends.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="space-y-3"
+              >
+                <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                  👻 Ghost Competitors
+                </h4>
+                {offlineFriends.slice(0, 2).map((friend) => (
+                  <GhostCompetitor
+                    key={friend.id}
+                    name={friend.name}
+                    avatar={friend.avatar}
+                    bestScore={friend.bestScore}
+                  />
+                ))}
+              </motion.div>
+            )}
+
             {/* Challenge a Friend */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
+              transition={{ delay: 0.7 }}
               className="glass-panel p-6 rounded-xl border border-primary/30"
             >
               <div className="flex items-center gap-3 mb-4">
