@@ -1,21 +1,97 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Float, MeshDistortMaterial } from '@react-three/drei';
+import { Float, MeshDistortMaterial, Sparkles, PointMaterial, Points } from '@react-three/drei';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { RecallifyLogo } from '@/components/brand/RecallifyLogo';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Brain, Sparkles, Zap, Trophy, Users } from 'lucide-react';
+import { ArrowRight, Brain, Sparkles as SparklesIcon, Zap, Trophy, Users } from 'lucide-react';
 
-const LiquidBackground = () => {
+// Glowing particle field
+const GlowingParticles = () => {
+  const particlesRef = useRef<THREE.Points>(null);
+  const count = 500;
+  
+  const positions = useMemo(() => {
+    const pos = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      pos[i * 3] = (Math.random() - 0.5) * 100;
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 100;
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 50;
+    }
+    return pos;
+  }, []);
+
+  useFrame((state) => {
+    if (particlesRef.current) {
+      particlesRef.current.rotation.y = state.clock.getElapsedTime() * 0.02;
+      particlesRef.current.rotation.x = Math.sin(state.clock.getElapsedTime() * 0.05) * 0.1;
+    }
+  });
+
+  return (
+    <Points ref={particlesRef} positions={positions} stride={3} frustumCulled={false}>
+      <PointMaterial
+        transparent
+        color="#8B5CF6"
+        size={0.5}
+        sizeAttenuation={true}
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+      />
+    </Points>
+  );
+};
+
+// Ethereal glow rings
+const GlowRings = () => {
+  const ringRef1 = useRef<THREE.Mesh>(null);
+  const ringRef2 = useRef<THREE.Mesh>(null);
+  const ringRef3 = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    const t = state.clock.getElapsedTime();
+    if (ringRef1.current) {
+      ringRef1.current.rotation.x = t * 0.2;
+      ringRef1.current.rotation.y = t * 0.1;
+    }
+    if (ringRef2.current) {
+      ringRef2.current.rotation.x = -t * 0.15;
+      ringRef2.current.rotation.z = t * 0.1;
+    }
+    if (ringRef3.current) {
+      ringRef3.current.rotation.y = t * 0.25;
+      ringRef3.current.rotation.z = -t * 0.05;
+    }
+  });
+
+  return (
+    <group>
+      <mesh ref={ringRef1}>
+        <torusGeometry args={[18, 0.15, 16, 100]} />
+        <meshBasicMaterial color="#8B5CF6" transparent opacity={0.4} />
+      </mesh>
+      <mesh ref={ringRef2}>
+        <torusGeometry args={[22, 0.1, 16, 100]} />
+        <meshBasicMaterial color="#22C55E" transparent opacity={0.3} />
+      </mesh>
+      <mesh ref={ringRef3}>
+        <torusGeometry args={[26, 0.08, 16, 100]} />
+        <meshBasicMaterial color="#F59E0B" transparent opacity={0.2} />
+      </mesh>
+    </group>
+  );
+};
+
+const GlowingBackground = () => {
   const meshRef = useRef<THREE.Mesh>(null);
   const { viewport } = useThree();
-  const uniforms = {
+  const uniforms = useMemo(() => ({
     uTime: { value: 0 },
     uMouse: { value: new THREE.Vector2(0, 0) },
-  };
+  }), []);
 
   useFrame((state) => {
     const { clock, mouse } = state;
@@ -33,12 +109,45 @@ const LiquidBackground = () => {
         uniforms={uniforms}
         vertexShader={`varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`}
         fragmentShader={`
-          uniform float uTime; uniform vec2 uMouse; varying vec2 vUv;
+          uniform float uTime; 
+          uniform vec2 uMouse; 
+          varying vec2 vUv;
+          
+          vec3 neonPurple = vec3(0.545, 0.361, 0.965);
+          vec3 neonGreen = vec3(0.133, 0.773, 0.369);
+          vec3 deepNavy = vec3(0.043, 0.059, 0.102);
+          
+          float noise(vec2 p) {
+            return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+          }
+          
           void main() {
-            vec2 uv = vUv; float t = uTime * 0.15;
-            vec2 m = uMouse * 0.1;
-            float color = smoothstep(0.0, 1.0, (sin(uv.x * 8.0 + t + m.x * 12.0) + sin(uv.y * 6.0 - t + m.y * 12.0)) * 0.5 + 0.5);
-            gl_FragColor = vec4(mix(vec3(0.005), vec3(0.05), color), 1.0);
+            vec2 uv = vUv; 
+            float t = uTime * 0.1;
+            vec2 m = uMouse * 0.15;
+            
+            // Flowing glow effect
+            float glow1 = sin(uv.x * 3.0 + t + m.x * 5.0) * sin(uv.y * 2.5 - t * 0.8 + m.y * 5.0);
+            float glow2 = sin(uv.x * 5.0 - t * 1.2) * sin(uv.y * 4.0 + t * 0.6);
+            float glow3 = sin(length(uv - 0.5 + m * 0.2) * 8.0 - t * 2.0);
+            
+            // Combine glows
+            float combinedGlow = (glow1 * 0.4 + glow2 * 0.3 + glow3 * 0.3) * 0.5 + 0.5;
+            combinedGlow = smoothstep(0.3, 0.7, combinedGlow);
+            
+            // Radial glow from center
+            float radialGlow = 1.0 - length(uv - 0.5 + m * 0.1) * 1.2;
+            radialGlow = max(0.0, radialGlow);
+            radialGlow = pow(radialGlow, 2.0);
+            
+            // Color mixing
+            vec3 glowColor = mix(neonPurple, neonGreen, glow2 * 0.5 + 0.5);
+            vec3 finalColor = deepNavy + glowColor * combinedGlow * 0.15 + glowColor * radialGlow * 0.2;
+            
+            // Add subtle noise for texture
+            finalColor += vec3(noise(uv * 500.0 + t)) * 0.02;
+            
+            gl_FragColor = vec4(finalColor, 1.0);
           }
         `}
       />
@@ -46,19 +155,61 @@ const LiquidBackground = () => {
   );
 };
 
-const BrainMonolith = () => {
+const GlowingBrainMonolith = () => {
   const meshRef = useRef<THREE.Mesh>(null);
+  const glowRef = useRef<THREE.Mesh>(null);
+  
   useFrame((state) => {
+    const t = state.clock.getElapsedTime();
     if (meshRef.current) {
-      meshRef.current.rotation.y = state.clock.getElapsedTime() * 0.25;
+      meshRef.current.rotation.y = t * 0.2;
+      meshRef.current.rotation.x = Math.sin(t * 0.3) * 0.1;
+    }
+    if (glowRef.current) {
+      glowRef.current.rotation.y = -t * 0.15;
+      const scale = 1.1 + Math.sin(t * 2) * 0.05;
+      glowRef.current.scale.setScalar(scale);
     }
   });
+  
   return (
-    <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
-      <mesh ref={meshRef}>
-        <icosahedronGeometry args={[13, 1]} />
-        <MeshDistortMaterial color="#8B5CF6" speed={4} distort={0.4} roughness={0.1} metalness={0.9} />
-      </mesh>
+    <Float speed={2} rotationIntensity={0.4} floatIntensity={1.5}>
+      <group>
+        {/* Outer glow sphere */}
+        <mesh ref={glowRef}>
+          <icosahedronGeometry args={[15, 1]} />
+          <meshBasicMaterial 
+            color="#8B5CF6" 
+            transparent 
+            opacity={0.08}
+            side={THREE.BackSide}
+          />
+        </mesh>
+        
+        {/* Main brain */}
+        <mesh ref={meshRef}>
+          <icosahedronGeometry args={[12, 2]} />
+          <MeshDistortMaterial 
+            color="#1a1a2e" 
+            speed={3} 
+            distort={0.3} 
+            roughness={0.1} 
+            metalness={0.95}
+            emissive="#8B5CF6"
+            emissiveIntensity={0.4}
+          />
+        </mesh>
+        
+        {/* Inner core glow */}
+        <mesh>
+          <icosahedronGeometry args={[8, 1]} />
+          <meshBasicMaterial 
+            color="#8B5CF6" 
+            transparent 
+            opacity={0.3}
+          />
+        </mesh>
+      </group>
     </Float>
   );
 };
@@ -87,13 +238,18 @@ const Index = () => {
 
   return (
     <section ref={containerRef} className="relative min-h-screen w-full bg-background flex flex-col overflow-hidden">
-      {/* 3D Background */}
+      {/* 3D Glow-in-the-Dark Background */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <Canvas camera={{ position: [0, 0, 60], fov: 35 }}>
-          <ambientLight intensity={0.4} />
-          <spotLight position={[50, 50, 50]} intensity={3} />
-          <LiquidBackground />
-          <BrainMonolith />
+          <ambientLight intensity={0.3} />
+          <pointLight position={[0, 0, 30]} intensity={2} color="#8B5CF6" />
+          <pointLight position={[30, 20, 20]} intensity={1.5} color="#22C55E" />
+          <pointLight position={[-30, -20, 20]} intensity={1} color="#F59E0B" />
+          <GlowingBackground />
+          <GlowingBrainMonolith />
+          <GlowRings />
+          <GlowingParticles />
+          <Sparkles count={200} scale={80} size={2} speed={0.3} color="#8B5CF6" />
         </Canvas>
       </div>
 
@@ -129,7 +285,7 @@ const Index = () => {
               transition={{ delay: 0.5, duration: 0.8 }}
             >
               <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel text-sm font-medium text-primary mb-8">
-                <Sparkles className="w-4 h-4" />
+                <SparklesIcon className="w-4 h-4" />
                 AI-Powered Memory Training
               </span>
             </motion.div>
