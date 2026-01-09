@@ -5,11 +5,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { GameProvider } from "@/contexts/GameContext";
+import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Analytics from "./pages/Analytics";
 import Library from "./pages/Library";
 import Challenges from "./pages/Challenges";
+import Social from "./pages/Social";
 import Settings from "./pages/Settings";
 import RecallMode from "./pages/RecallMode";
 import NotFound from "./pages/NotFound";
@@ -26,12 +28,13 @@ const AppRoutes = () => {
   
   return (
     <Routes>
+      <Route path="/" element={<Index />} />
       <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
-      <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
       <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
       <Route path="/challenges" element={<ProtectedRoute><Challenges /></ProtectedRoute>} />
+      <Route path="/social" element={<ProtectedRoute><Social /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
       <Route path="/recall" element={<ProtectedRoute><RecallMode /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
