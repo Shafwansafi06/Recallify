@@ -4,6 +4,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { StreakCard } from '@/components/gamification/StreakCard';
 import { XPProgress } from '@/components/gamification/XPProgress';
+import { SmartNudgeBanner } from '@/components/ui/smart-nudge-banner';
+import { SocialProof } from '@/components/ui/social-proof';
 import { mockDecks, mockChallenges, aiInsights } from '@/data/mockData';
 import { 
   Play, 
@@ -40,6 +42,9 @@ const Dashboard = () => {
   return (
     <AppLayout>
       <div className="max-w-7xl mx-auto space-y-8">
+        {/* Smart Nudge Banner */}
+        <SmartNudgeBanner />
+
         {/* Greeting Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -157,6 +162,9 @@ const Dashboard = () => {
                     <span>~15 minutes</span>
                   </div>
                 </div>
+                
+                {/* Silent Social Proof */}
+                <SocialProof variant="global" className="mt-4" />
               </div>
             </motion.div>
 

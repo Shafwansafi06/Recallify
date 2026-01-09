@@ -3,6 +3,7 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { LevelUpModal } from '@/components/gamification/LevelUpModal';
 import { XPFloater } from '@/components/gamification/XPFloater';
+import { DemoModeToggle } from '@/components/ui/demo-mode-toggle';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -20,6 +21,7 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
       </div>
       <LevelUpModal />
       <XPFloater />
+      <DemoModeToggle />
       {/* Bento Grid Overlay */}
       <div className="fixed inset-0 pointer-events-none bento-mask opacity-5 z-[100]" />
     </div>

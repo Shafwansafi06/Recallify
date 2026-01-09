@@ -6,6 +6,7 @@ import { useGame } from '@/contexts/GameContext';
 import { mockFlashcards, mockDecks, type Flashcard } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { SessionSummary } from '@/components/recall/SessionSummary';
 import { 
   X, 
   RotateCcw, 
@@ -84,78 +85,23 @@ const RecallMode = () => {
     ? Math.round((sessionStats.correct / (sessionStats.correct + sessionStats.incorrect)) * 100)
     : 0;
 
+  const handleStudyAgain = () => {
+    setCurrentIndex(0);
+    setIsFlipped(false);
+    setSessionStats({ correct: 0, incorrect: 0, xpEarned: 0 });
+    setIsComplete(false);
+  };
+
   if (isComplete) {
     return (
-      <div className="min-h-screen bg-gradient-recallify flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="glass-panel p-8 rounded-2xl text-center max-w-md w-full"
-        >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', delay: 0.2 }}
-            className="w-20 h-20 mx-auto rounded-full bg-gradient-success flex items-center justify-center glow-success mb-6"
-          >
-            <Trophy className="w-10 h-10 text-primary-foreground" />
-          </motion.div>
-
-          <h2 className="font-display text-3xl font-bold text-foreground mb-2">
-            Session Complete! 🎉
-          </h2>
-          <p className="text-muted-foreground mb-8">
-            Great work! Here's how you did.
-          </p>
-
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 mb-8">
-            <div className="glass-panel p-4 rounded-xl">
-              <p className="text-3xl font-display font-bold text-success">{sessionStats.correct}</p>
-              <p className="text-xs text-muted-foreground">Correct</p>
-            </div>
-            <div className="glass-panel p-4 rounded-xl">
-              <p className="text-3xl font-display font-bold text-error">{sessionStats.incorrect}</p>
-              <p className="text-xs text-muted-foreground">Incorrect</p>
-            </div>
-            <div className="glass-panel p-4 rounded-xl">
-              <p className="text-3xl font-display font-bold text-foreground">{accuracy}%</p>
-              <p className="text-xs text-muted-foreground">Accuracy</p>
-            </div>
-          </div>
-
-          {/* XP Earned */}
-          <div className="glass-panel p-4 rounded-xl mb-8 flex items-center justify-center gap-3">
-            <Zap className="w-6 h-6 text-primary" />
-            <span className="text-2xl font-display font-bold gradient-text-xp">
-              +{sessionStats.xpEarned} XP
-            </span>
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-4">
-            <Button 
-              variant="outline" 
-              className="flex-1"
-              onClick={() => navigate('/dashboard')}
-            >
-              Back to Dashboard
-            </Button>
-            <Button 
-              className="flex-1 bg-gradient-xp hover:opacity-90 text-primary-foreground gap-2"
-              onClick={() => {
-                setCurrentIndex(0);
-                setIsFlipped(false);
-                setSessionStats({ correct: 0, incorrect: 0, xpEarned: 0 });
-                setIsComplete(false);
-              }}
-            >
-              <RotateCcw className="w-4 h-4" />
-              Study Again
-            </Button>
-          </div>
-        </motion.div>
-      </div>
+      <SessionSummary
+        xpEarned={sessionStats.xpEarned}
+        streak={user?.streak || 0}
+        accuracy={accuracy}
+        correct={sessionStats.correct}
+        incorrect={sessionStats.incorrect}
+        onStudyAgain={handleStudyAgain}
+      />
     );
   }
 
