@@ -6,6 +6,7 @@ import { Float, MeshDistortMaterial, Sparkles, PointMaterial, Points } from '@re
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { RecallifyLogo } from '@/components/brand/RecallifyLogo';
+import { ProductFeatures } from '@/components/features/ProductFeatures';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Brain, Sparkles as SparklesIcon, Zap, Trophy, Users } from 'lucide-react';
 
@@ -379,6 +380,9 @@ const Index = () => {
             ))}
           </div>
         </motion.div>
+
+        {/* Product Features Bento Grid */}
+        <ProductFeatures />
 
         {/* Footer */}
         <footer className="p-6 text-center border-t border-border/50">
